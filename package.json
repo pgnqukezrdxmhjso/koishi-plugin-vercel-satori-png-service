@@ -1,22 +1,56 @@
 {
   "name": "koishi-plugin-vercel-satori-png-service",
   "description": "Use Vercel Satori and Resvg.js to convert html to png",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "scripts": {
+    "build": "cd ../../ && yarn build vercel-satori-png-service",
+    "pub": "cd ../../ && yarn pub vercel-satori-png-service",
+    "fastPub": "cd ../../ && yarn bump -3 vercel-satori-png-service && yarn build vercel-satori-png-service && yarn pub vercel-satori-png-service",
+    "test": "node ./test/test.js"
+  },
   "files": [
     "lib",
     "dist"
   ],
+  "contributors": [
+    "pgnqukezrdxmhjso"
+  ],
+  "homepage": "https://github.com/pgnqukezrdxmhjso/koishi-plugin-vercel-satori-png-service",
+  "bugs": {
+    "url": "https://github.com/pgnqukezrdxmhjso/koishi-plugin-vercel-satori-png-service/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pgnqukezrdxmhjso/koishi-plugin-vercel-satori-png-service.git"
+  },
   "license": "MIT",
-  "scripts": {},
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "render",
+    "html to png",
+    "jsx to png"
   ],
-  "devDependencies": {},
   "peerDependencies": {
     "koishi": "^4.18.3"
+  },
+  "dependencies": {
+    "@vercel/og": "^0.6.4",
+    "html-react-parser": "^5.2.2",
+    "react": "^19.0.0",
+    "sucrase": "^3.35.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19"
+  },
+  "koishi": {
+    "service": {
+      "implements": [
+        "vercelSatoriPngService"
+      ]
+    }
   }
 }
