@@ -72,6 +72,13 @@ class VercelSatoriPngService extends Service {
     const reactElement = this.htmlToReactElement(htmlCode);
     return this.createNodejsStream(reactElement, options);
   }
+
+  async reactElementToPng(
+    reactElement: ReactElement<any, any>,
+    options: ImageOptions,
+  ): Promise<Readable> {
+    return this.createNodejsStream(reactElement, options);
+  }
 }
 
 namespace VercelSatoriPngService {
