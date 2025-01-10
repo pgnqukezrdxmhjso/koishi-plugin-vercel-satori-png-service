@@ -4,6 +4,7 @@ import { transform } from "sucrase";
 import HtmlReactParser from "html-react-parser";
 import { Readable } from "stream";
 import type { unstable_createNodejsStream } from "@vercel/og";
+import type { Font } from "satori";
 
 export type ImageOptions = Parameters<typeof unstable_createNodejsStream>[1];
 
@@ -22,12 +23,14 @@ class VercelSatoriPngService extends Service {
   private _ctx: Context;
   private _config: VercelSatoriPngService.Config;
   private createNodejsStream: typeof unstable_createNodejsStream;
+  private fonts: Font[] = [];
 
   constructor(ctx: Context, config: VercelSatoriPngService.Config) {
     super(ctx, serviceName);
     this._ctx = ctx;
     this._config = config;
   }
+
   async start() {
     this.createNodejsStream = (
       await import("@vercel/og")
@@ -48,36 +51,69 @@ class VercelSatoriPngService extends Service {
       "_args_623601",
       "with (_args_623601) {\nreturn " + hCode.replace(/^\s+/, "") + "\n}",
     );
-    let res = await fn(React, data || {});
+    let res: ReactElement<any, any> | Function;
+    try {
+      res = await fn(React, data || {});
+    } catch (e) {
+      e.message = fn.toString() + "\n" + e.message;
+      throw e;
+    }
     let i = 0;
     while (typeof res === "function" && i++ < 999) {
       res = await res();
     }
-    return res;
-  }
-
-  async jsxToPng(
-    jsxCode: string,
-    options: ImageOptions,
-    data?: Record<any, any>,
-  ): Promise<Readable> {
-    const reactElement = await this.jsxToReactElement(jsxCode, data);
-    return this.createNodejsStream(reactElement, options);
+    return res as ReactElement<any, any>;
   }
 
   htmlToReactElement(htmlCode: string): ReactElement<any, any> {
     return HtmlReactParser(htmlCode) as ReactElement;
   }
-  htmlToPng(htmlCode: string, options: ImageOptions): Promise<Readable> {
+
+  addFont(fonts: Font[]) {
+    this.fonts.push(...fonts);
+    this.ctx.on("dispose", () => {
+      this.removeFont(fonts);
+    });
+  }
+
+  removeFont(fonts: Font[]) {
+    fonts.forEach((font) => {
+      const index = this.fonts.indexOf(font);
+      if (index === -1) {
+        return;
+      }
+      this.fonts.splice(index, 1);
+    });
+  }
+
+  private buildOptions(options?: ImageOptions): ImageOptions {
+    options ||= {};
+    if (this.fonts.length > 0) {
+      options.fonts ||= [];
+      options.fonts.push(...this.fonts);
+    }
+    return options;
+  }
+
+  async jsxToPng(
+    jsxCode: string,
+    options?: ImageOptions,
+    data?: Record<any, any>,
+  ): Promise<Readable> {
+    const reactElement = await this.jsxToReactElement(jsxCode, data);
+    return this.createNodejsStream(reactElement, this.buildOptions(options));
+  }
+
+  htmlToPng(htmlCode: string, options?: ImageOptions): Promise<Readable> {
     const reactElement = this.htmlToReactElement(htmlCode);
-    return this.createNodejsStream(reactElement, options);
+    return this.createNodejsStream(reactElement, this.buildOptions(options));
   }
 
   async reactElementToPng(
     reactElement: ReactElement<any, any>,
-    options: ImageOptions,
+    options?: ImageOptions,
   ): Promise<Readable> {
-    return this.createNodejsStream(reactElement, options);
+    return this.createNodejsStream(reactElement, this.buildOptions(options));
   }
 }
 
