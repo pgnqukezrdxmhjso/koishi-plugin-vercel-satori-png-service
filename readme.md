@@ -10,8 +10,8 @@ html to ReactElement [html-react-parser](https://www.npmjs.com/package/html-reac
 
 jsx to ReactElement [sucrase](https://www.npmjs.com/package/sucrase)
 
-ReactElement to png [@vercel/og](https://www.npmjs.com/package/@vercel/og)
+ReactElement to svg [vercel/satori](https://github.com/vercel/satori#overview)
 
 [og-playground](https://og-playground.vercel.app/)
 
-[vercel/satori](https://github.com/vercel/satori#overview)
+svg to png [@resvg/resvg-wasm](https://www.npmjs.com/package/@resvg/resvg-wasm)

@@ -3,10 +3,9 @@ import React, { ReactElement } from "react";
 import { transform } from "sucrase";
 import HtmlReactParser from "html-react-parser";
 import { Readable } from "stream";
-import type { unstable_createNodejsStream } from "@vercel/og";
-import type { Font } from "satori";
-
-export type ImageOptions = Parameters<typeof unstable_createNodejsStream>[1];
+import { initSatori, createNodejsStream } from "./Satori";
+import { Font, ImageOptions } from "./og";
+export { Font, ImageOptions } from "./og";
 
 const serviceName = "vercelSatoriPngService";
 
@@ -19,10 +18,11 @@ declare module "koishi" {
   }
 }
 
+let initialized = false;
+
 class VercelSatoriPngService extends Service {
   private _ctx: Context;
   private _config: VercelSatoriPngService.Config;
-  private createNodejsStream: typeof unstable_createNodejsStream;
   private fonts: Font[] = [];
 
   constructor(ctx: Context, config: VercelSatoriPngService.Config) {
@@ -32,9 +32,11 @@ class VercelSatoriPngService extends Service {
   }
 
   async start() {
-    this.createNodejsStream = (
-      await import("@vercel/og")
-    ).unstable_createNodejsStream;
+    if (initialized) {
+      return;
+    }
+    await initSatori();
+    initialized = true;
   }
 
   async jsxToReactElement(
@@ -101,22 +103,21 @@ class VercelSatoriPngService extends Service {
     data?: Record<any, any>,
   ): Promise<Readable> {
     const reactElement = await this.jsxToReactElement(jsxCode, data);
-    return this.createNodejsStream(reactElement, this.buildOptions(options));
+    return createNodejsStream(reactElement, this.buildOptions(options));
   }
 
   htmlToPng(htmlCode: string, options?: ImageOptions): Promise<Readable> {
     const reactElement = this.htmlToReactElement(htmlCode);
-    return this.createNodejsStream(reactElement, this.buildOptions(options));
+    return createNodejsStream(reactElement, this.buildOptions(options));
   }
 
   async reactElementToPng(
     reactElement: ReactElement<any, any>,
     options?: ImageOptions,
   ): Promise<Readable> {
-    return this.createNodejsStream(reactElement, this.buildOptions(options));
+    return createNodejsStream(reactElement, this.buildOptions(options));
   }
 }
-
 namespace VercelSatoriPngService {
   export const usage =
     'html to ReactElement <a target="_blank" href="https://www.npmjs.com/package/html-react-parser">html-react-parser</a>  \n' +
