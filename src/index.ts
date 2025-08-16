@@ -122,9 +122,9 @@ namespace VercelSatoriPngService {
   export const usage =
     'html to ReactElement <a target="_blank" href="https://www.npmjs.com/package/html-react-parser">html-react-parser</a>  \n' +
     'jsx to ReactElement <a target="_blank" href="https://www.npmjs.com/package/sucrase">sucrase</a>  \n' +
-    'ReactElement to png <a target="_blank" href="https://www.npmjs.com/package/@vercel/og">@vercel/og</a>  \n' +
+    'ReactElement to svg <a target="_blank" href="https://github.com/vercel/satori#overview">vercel/satori</a>  \n' +
     '<a target="_blank" href="https://og-playground.vercel.app/">og-playground</a>  \n' +
-    '<a target="_blank" href="https://github.com/vercel/satori#overview">vercel/satori</a>  \n';
+    'svg to png <a target="_blank" href="https://www.npmjs.com/package/@resvg/resvg-wasm">@resvg/resvg-wasm</a>';
 
   export interface Config {}
   export const Config: Schema<Config> = Schema.object({});

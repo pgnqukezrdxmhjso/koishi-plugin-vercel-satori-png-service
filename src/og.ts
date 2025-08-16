@@ -1,5 +1,7 @@
 import { loadEmoji, getIconCode, EmojiType } from "./emoji";
 import { FontDetector, languageFontMap } from "./language";
+import * as Resvg from "@resvg/resvg-wasm";
+import type Satori from "satori";
 import type { SatoriOptions } from "satori";
 import type { ReactElement } from "react";
 
@@ -126,11 +128,11 @@ const loadDynamicAsset = ({ emoji }: { emoji?: EmojiType }) => {
 };
 
 export default async function render(
-  satori,
-  resvg,
+  satori: typeof Satori,
+  resvg: typeof Resvg,
   opts: ImageOptions,
   defaultFonts: Font[],
-  element: ReactElement,
+  element: ReactElement<any, any>,
 ) {
   const options = Object.assign(
     {
