@@ -3,7 +3,7 @@ import React, { ReactElement } from "react";
 import { transform } from "sucrase";
 import HtmlReactParser from "html-react-parser";
 import { Readable } from "stream";
-import { initSatori, createNodejsStream } from "./Satori";
+import { initSatori, createNodejsStream, renderSvg, getResvg } from "./Satori";
 import { Font, ImageOptions } from "./og";
 export { Font, ImageOptions } from "./og";
 
@@ -116,6 +116,17 @@ class VercelSatoriPngService extends Service {
     options?: ImageOptions,
   ): Promise<Readable> {
     return createNodejsStream(reactElement, this.buildOptions(options));
+  }
+
+  async reactElementToSvg(
+    reactElement: ReactElement<any, any>,
+    options?: ImageOptions,
+  ): Promise<string> {
+    return renderSvg(reactElement, this.buildOptions(options));
+  }
+
+  getResvg() {
+    return getResvg();
   }
 }
 namespace VercelSatoriPngService {

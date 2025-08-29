@@ -127,14 +127,8 @@ const loadDynamicAsset = ({ emoji }: { emoji?: EmojiType }) => {
   };
 };
 
-export default async function render(
-  satori: typeof Satori,
-  resvg: typeof Resvg,
-  opts: ImageOptions,
-  defaultFonts: Font[],
-  element: ReactElement<any, any>,
-) {
-  const options = Object.assign(
+function mergeOptions(opts: ImageOptions) {
+  return Object.assign(
     {
       width: 1200,
       height: 630,
@@ -142,7 +136,34 @@ export default async function render(
     },
     opts,
   );
+}
 
+export async function renderSvg(
+  satori: typeof Satori,
+  opts: ImageOptions,
+  defaultFonts: Font[],
+  element: ReactElement<any, any>,
+) {
+  const options = mergeOptions(opts);
+  return await satori(element, {
+    width: options.width,
+    height: options.height,
+    debug: options.debug,
+    fonts: options.fonts || defaultFonts,
+    loadAdditionalAsset: loadDynamicAsset({
+      emoji: options.emoji,
+    }),
+  });
+}
+
+export default async function render(
+  satori: typeof Satori,
+  resvg: typeof Resvg,
+  opts: ImageOptions,
+  defaultFonts: Font[],
+  element: ReactElement<any, any>,
+) {
+  const options = mergeOptions(opts);
   const svg = await satori(element, {
     width: options.width,
     height: options.height,

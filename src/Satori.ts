@@ -7,13 +7,11 @@ import * as resvg from "@resvg/resvg-wasm";
 import type Satori from "satori";
 
 import { ReactElement } from "react";
-import render, { Font, ImageOptions } from "./og";
+import render, { Font, ImageOptions, renderSvg as _renderSvg } from "./og";
 
 let fontData: Buffer<ArrayBufferLike>;
 let satori: typeof Satori;
 export const initSatori = async () => {
-
-
   satori = (await import("satori")).default;
   const require = createRequire("file:///" + __filename);
   const reSvgWasm = path.join(
@@ -24,14 +22,10 @@ export const initSatori = async () => {
   fontData = await fs.readFile(
     require.resolve("../noto-sans-v27-latin-regular.ttf"),
   );
-
 };
 
-export const createNodejsStream = async (
-  element: ReactElement<any, any>,
-  options: ImageOptions,
-) => {
-  const fonts = [
+const getDefaultFonts = () =>
+  [
     {
       name: "sans serif",
       data: fontData,
@@ -40,7 +34,27 @@ export const createNodejsStream = async (
     },
   ] as Font[];
 
-  const result = await render(satori, resvg, options, fonts, element);
-
+export const createNodejsStream = async (
+  element: ReactElement<any, any>,
+  options: ImageOptions,
+) => {
+  const result = await render(
+    satori,
+    resvg,
+    options,
+    getDefaultFonts(),
+    element,
+  );
   return Readable.from(Buffer.from(result));
+};
+
+export const renderSvg = async (
+  element: ReactElement<any, any>,
+  options: ImageOptions,
+) => {
+  return _renderSvg(satori, options, getDefaultFonts(), element);
+};
+
+export const getResvg = () => {
+  return resvg.Resvg;
 };
