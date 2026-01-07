@@ -115,7 +115,7 @@ const loadDynamicAsset = ({ emoji }: { emoji?: EmojiType }) => {
   };
 
   return async (...args: Parameters<typeof fn>) => {
-    const key = JSON.stringify(args);
+    const key = emoji + "-" + JSON.stringify(args);
     const cache = assetCache.get(key);
     if (cache) return cache;
 
