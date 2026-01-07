@@ -102,13 +102,14 @@ class VercelSatoriPngService extends Service {
     options?: ImageOptions,
     data?: Record<any, any>,
   ): Promise<Readable> {
-    const reactElement = await this.jsxToReactElement(jsxCode, data);
-    return createNodejsStream(reactElement, this.buildOptions(options));
+    return this.reactElementToPng(
+      await this.jsxToReactElement(jsxCode, data),
+      options,
+    );
   }
 
   htmlToPng(htmlCode: string, options?: ImageOptions): Promise<Readable> {
-    const reactElement = this.htmlToReactElement(htmlCode);
-    return createNodejsStream(reactElement, this.buildOptions(options));
+    return this.reactElementToPng(this.htmlToReactElement(htmlCode), options);
   }
 
   async reactElementToPng(

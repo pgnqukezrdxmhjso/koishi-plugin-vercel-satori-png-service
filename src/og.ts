@@ -10,14 +10,12 @@ export type ImageOptions = {
    * The width of the image.
    *
    * @type {number}
-   * @default 1200
    */
   width?: number;
   /**
    * The height of the image.
    *
    * @type {number}
-   * @default 630
    */
   height?: number;
   /**
@@ -130,8 +128,6 @@ const loadDynamicAsset = ({ emoji }: { emoji?: EmojiType }) => {
 function mergeOptions(opts: ImageOptions) {
   return Object.assign(
     {
-      width: 1200,
-      height: 630,
       debug: false,
     },
     opts,
