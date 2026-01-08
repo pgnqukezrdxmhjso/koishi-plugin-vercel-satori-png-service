@@ -6,6 +6,7 @@ import { Readable } from "node:stream";
 import * as resvg from "@resvg/resvg-wasm";
 import type Satori from "satori";
 import Vips from "wasm-vips";
+import type { JSDOM } from "jsdom";
 
 import { ReactElement } from "react";
 import render, {
@@ -19,8 +20,10 @@ import render, {
 let fontData: Buffer<ArrayBufferLike>;
 let satori: typeof Satori;
 let vips: typeof Vips;
+let JsDom: typeof JSDOM;
 export const initSatori = async () => {
   satori = (await import("satori")).default;
+  JsDom = (await import("jsdom")).JSDOM;
   vips = await Vips({
     dynamicLibraries: ["vips-resvg.wasm"],
   });
@@ -62,6 +65,7 @@ export const createNodejsStream = async (
     satori,
     resvg,
     vips,
+    JsDom,
     logger,
     options,
     getDefaultFonts(),
@@ -75,7 +79,7 @@ export const svgToPng = async (
   options: ImageOptions,
   logger: Logger,
 ) => {
-  const result = await _svgToPng(resvg, vips, logger, options, svg);
+  const result = await _svgToPng(resvg, vips, JsDom, logger, options, svg);
   return Readable.from(Buffer.from(result));
 };
 

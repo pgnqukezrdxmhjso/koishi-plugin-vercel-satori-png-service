@@ -7,7 +7,7 @@ import type { ReactElement } from "react";
 import type Vips from "wasm-vips";
 import SkiaCanvas from "skia-canvas";
 import { Canvg } from "canvg";
-import { JSDOM } from "jsdom";
+import type { JSDOM } from "jsdom";
 
 export type ImageOptions = {
   /**
@@ -165,6 +165,7 @@ export async function renderSvg(
 export async function svgToPng(
   resvg: typeof Resvg,
   vips: typeof Vips,
+  JsDom: typeof JSDOM,
   logger: Logger,
   options: ImageOptions,
   svg: string,
@@ -175,7 +176,7 @@ export async function svgToPng(
     case "skia-canvas-canvg": {
       const canvas = new SkiaCanvas.Canvas(1, 1);
       const ctx = canvas.getContext("2d");
-      const dom = new JSDOM();
+      const dom = new JsDom();
       const v = Canvg.fromString(ctx as any, svg, {
         window: dom.window as any,
         DOMParser: dom.window.DOMParser as any,
@@ -223,11 +224,12 @@ export default async function render(
   satori: typeof Satori,
   resvg: typeof Resvg,
   vips: typeof Vips,
+  JsDom: typeof JSDOM,
   logger: Logger,
   options: ImageOptions,
   defaultFonts: Font[],
   element: ReactElement<any, any>,
 ) {
   const svg = await renderSvg(satori, logger, options, defaultFonts, element);
-  return svgToPng(resvg, vips, logger, options, svg);
+  return svgToPng(resvg, vips, JsDom, logger, options, svg);
 }
