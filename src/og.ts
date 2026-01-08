@@ -4,6 +4,10 @@ import * as Resvg from "@resvg/resvg-wasm";
 import type Satori from "satori";
 import type { SatoriOptions } from "satori";
 import type { ReactElement } from "react";
+import type Vips from "wasm-vips";
+import SkiaCanvas from "skia-canvas";
+import { Canvg } from "canvg";
+import { JSDOM } from "jsdom";
 
 export type ImageOptions = {
   /**
@@ -39,8 +43,16 @@ export type ImageOptions = {
    * @default 'twemoji'
    */
   emoji?: EmojiType;
+  /**
+   * The converter to use.
+   *
+   * @default 'resvg'
+   */
+  converter?: "resvg" | "vips" | "skia-canvas" | "skia-canvas-canvg";
+  showLog?: boolean;
 };
 export type Font = ImageOptions["fonts"][number];
+export type Logger = (msg: string) => void;
 
 async function loadGoogleFont(font: string, text: string) {
   if (!font || !text) return;
@@ -125,41 +137,14 @@ const loadDynamicAsset = ({ emoji }: { emoji?: EmojiType }) => {
   };
 };
 
-function mergeOptions(opts: ImageOptions) {
-  return Object.assign(
-    {
-      debug: false,
-    },
-    opts,
-  );
-}
-
 export async function renderSvg(
   satori: typeof Satori,
-  opts: ImageOptions,
+  logger: Logger,
+  options: ImageOptions,
   defaultFonts: Font[],
   element: ReactElement<any, any>,
 ) {
-  const options = mergeOptions(opts);
-  return await satori(element, {
-    width: options.width,
-    height: options.height,
-    debug: options.debug,
-    fonts: options.fonts || defaultFonts,
-    loadAdditionalAsset: loadDynamicAsset({
-      emoji: options.emoji,
-    }),
-  });
-}
-
-export default async function render(
-  satori: typeof Satori,
-  resvg: typeof Resvg,
-  opts: ImageOptions,
-  defaultFonts: Font[],
-  element: ReactElement<any, any>,
-) {
-  const options = mergeOptions(opts);
+  const startTime = options.showLog ? Date.now() : undefined;
   const svg = await satori(element, {
     width: options.width,
     height: options.height,
@@ -169,17 +154,80 @@ export default async function render(
       emoji: options.emoji,
     }),
   });
+  if (options.showLog) {
+    logger(
+      `renderSvg time: ${Date.now() - startTime}ms; svg size: ${svg.length}`,
+    );
+  }
+  return svg;
+}
 
-  const resvgJS = new resvg.Resvg(svg, {
-    fitTo: {
-      mode: "width",
-      value: options.width,
-    },
-  });
-
-  const pngData = resvgJS.render();
-  const pngBuffer = pngData.asPng();
-  pngData.free();
-  resvgJS.free();
+export async function svgToPng(
+  resvg: typeof Resvg,
+  vips: typeof Vips,
+  logger: Logger,
+  options: ImageOptions,
+  svg: string,
+) {
+  const startTime = options.showLog ? Date.now() : undefined;
+  let pngBuffer: Uint8Array;
+  switch (options.converter) {
+    case "skia-canvas-canvg": {
+      const canvas = new SkiaCanvas.Canvas(1, 1);
+      const ctx = canvas.getContext("2d");
+      const dom = new JSDOM();
+      const v = Canvg.fromString(ctx as any, svg, {
+        window: dom.window as any,
+        DOMParser: dom.window.DOMParser as any,
+        createCanvas: (w, h) => new SkiaCanvas.Canvas(w, h) as any,
+        createImage: SkiaCanvas.Image as any,
+        ignoreDimensions: false,
+      });
+      await v.render();
+      pngBuffer = await canvas.toBuffer("png");
+      break;
+    }
+    case "skia-canvas": {
+      const img = await SkiaCanvas.loadImage(Buffer.from(svg));
+      const canvas = new SkiaCanvas.Canvas(img.width, img.height);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      pngBuffer = await canvas.toBuffer("png");
+      break;
+    }
+    case "vips": {
+      const img = vips.Image.svgloadBuffer(Buffer.from(svg));
+      pngBuffer = img.pngsaveBuffer();
+      img.delete();
+      break;
+    }
+    case "resvg":
+    default: {
+      const resvgJS = new resvg.Resvg(svg);
+      const pngData = resvgJS.render();
+      pngBuffer = pngData.asPng();
+      pngData.free();
+      resvgJS.free();
+      break;
+    }
+  }
+  if (options.showLog) {
+    logger(
+      `svgToPng time: ${Date.now() - startTime}ms; converter:${options.converter}; png size: ${pngBuffer.length}`,
+    );
+  }
   return pngBuffer;
+}
+
+export default async function render(
+  satori: typeof Satori,
+  resvg: typeof Resvg,
+  vips: typeof Vips,
+  logger: Logger,
+  options: ImageOptions,
+  defaultFonts: Font[],
+  element: ReactElement<any, any>,
+) {
+  const svg = await renderSvg(satori, logger, options, defaultFonts, element);
+  return svgToPng(resvg, vips, logger, options, svg);
 }

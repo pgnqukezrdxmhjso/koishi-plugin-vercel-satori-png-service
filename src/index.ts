@@ -2,8 +2,17 @@ import { Context, Schema, Service } from "koishi";
 import React, { ReactElement } from "react";
 import { transform } from "sucrase";
 import HtmlReactParser from "html-react-parser";
+import SkiaCanvas from "skia-canvas";
+
 import { Readable } from "stream";
-import { initSatori, createNodejsStream, renderSvg, getResvg } from "./Satori";
+import {
+  initSatori,
+  getResvg,
+  getVips,
+  createNodejsStream,
+  svgToPng,
+  renderSvg,
+} from "./Satori";
 import { Font, ImageOptions } from "./og";
 export { Font, ImageOptions } from "./og";
 
@@ -39,6 +48,35 @@ class VercelSatoriPngService extends Service {
     initialized = true;
   }
 
+  addFont(fonts: Font[]) {
+    this.fonts.push(...fonts);
+    this.ctx.on("dispose", () => {
+      this.removeFont(fonts);
+    });
+  }
+
+  removeFont(fonts: Font[]) {
+    fonts.forEach((font) => {
+      const index = this.fonts.indexOf(font);
+      if (index === -1) {
+        return;
+      }
+      this.fonts.splice(index, 1);
+    });
+  }
+
+  getResvg() {
+    return getResvg();
+  }
+
+  getVips() {
+    return getVips();
+  }
+
+  getSkiaCanvas() {
+    return SkiaCanvas;
+  }
+
   async jsxToReactElement(
     jsxCode: string,
     data?: Record<any, any>,
@@ -71,32 +109,6 @@ class VercelSatoriPngService extends Service {
     return HtmlReactParser(htmlCode) as ReactElement;
   }
 
-  addFont(fonts: Font[]) {
-    this.fonts.push(...fonts);
-    this.ctx.on("dispose", () => {
-      this.removeFont(fonts);
-    });
-  }
-
-  removeFont(fonts: Font[]) {
-    fonts.forEach((font) => {
-      const index = this.fonts.indexOf(font);
-      if (index === -1) {
-        return;
-      }
-      this.fonts.splice(index, 1);
-    });
-  }
-
-  private buildOptions(options?: ImageOptions): ImageOptions {
-    options ||= {};
-    if (this.fonts.length > 0) {
-      options.fonts ||= [];
-      options.fonts.push(...this.fonts);
-    }
-    return options;
-  }
-
   async jsxToPng(
     jsxCode: string,
     options?: ImageOptions,
@@ -112,31 +124,58 @@ class VercelSatoriPngService extends Service {
     return this.reactElementToPng(this.htmlToReactElement(htmlCode), options);
   }
 
+  private buildOptions(options?: ImageOptions): ImageOptions {
+    options ||= {};
+    if (this.fonts.length > 0) {
+      options.fonts ||= [];
+      options.fonts.push(...this.fonts);
+    }
+    return options;
+  }
+
   async reactElementToPng(
     reactElement: ReactElement<any, any>,
     options?: ImageOptions,
   ): Promise<Readable> {
-    return createNodejsStream(reactElement, this.buildOptions(options));
+    return createNodejsStream(
+      reactElement,
+      this.buildOptions(options),
+      this._ctx.logger.info.bind(this._ctx.logger),
+    );
+  }
+
+  async svgToPng(svg: string, options?: ImageOptions) {
+    return svgToPng(
+      svg,
+      this.buildOptions(options),
+      this._ctx.logger.info.bind(this._ctx.logger),
+    );
   }
 
   async reactElementToSvg(
     reactElement: ReactElement<any, any>,
     options?: ImageOptions,
   ): Promise<string> {
-    return renderSvg(reactElement, this.buildOptions(options));
-  }
-
-  getResvg() {
-    return getResvg();
+    return renderSvg(
+      reactElement,
+      this.buildOptions(options),
+      this._ctx.logger.info.bind(this._ctx.logger),
+    );
   }
 }
 namespace VercelSatoriPngService {
   export const usage =
-    'html to ReactElement <a target="_blank" href="https://www.npmjs.com/package/html-react-parser">html-react-parser</a>  \n' +
-    'jsx to ReactElement <a target="_blank" href="https://www.npmjs.com/package/sucrase">sucrase</a>  \n' +
-    'ReactElement to svg <a target="_blank" href="https://github.com/vercel/satori#overview">vercel/satori</a>  \n' +
-    '<a target="_blank" href="https://og-playground.vercel.app/">og-playground</a>  \n' +
-    'svg to png <a target="_blank" href="https://www.npmjs.com/package/@resvg/resvg-wasm">@resvg/resvg-wasm</a>';
+    'html to ReactElement <a target="_blank" href="https://www.npmjs.com/package/html-react-parser">html-react-parser</a><br/>' +
+    'jsx to ReactElement <a target="_blank" href="https://www.npmjs.com/package/sucrase">sucrase</a><br/>' +
+    'ReactElement to svg <a target="_blank" href="https://github.com/vercel/satori#overview">vercel/satori</a> ' +
+    '<a target="_blank" href="https://og-playground.vercel.app/">og-playground</a><br/>' +
+    "<hr/>" +
+    "svg to png<br/>" +
+    '<a target="_blank" href="https://www.npmjs.com/package/@resvg/resvg-wasm">@resvg/resvg-wasm</a><br/>' +
+    '<a target="_blank" href="https://www.npmjs.com/package/wasm-vips">wasm-vips</a><br/>' +
+    '<a target="_blank" href="https://www.npmjs.com/package/skia-canvas">skia-canvas</a> ' +
+    '<a target="_blank" href="https://www.npmjs.com/package/canvg">canvg</a> ' +
+    '<a target="_blank" href="https://www.npmjs.com/package/jsdom">jsdom</a><br/>';
 
   export interface Config {}
   export const Config: Schema<Config> = Schema.object({});

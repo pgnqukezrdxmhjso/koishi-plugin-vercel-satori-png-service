@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-vercel-satori-png-service",
   "description": "Use Vercel Satori and Resvg.js to convert html to png",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
@@ -41,10 +41,14 @@
   },
   "dependencies": {
     "@resvg/resvg-wasm": "^2.6.3-alpha.2",
+    "canvg": "^4.0.3",
     "html-react-parser": "^5.2.11",
+    "jsdom": "^27.4.0",
     "react": "^19.3.0-canary-fd524fe0-20251121",
     "satori": "^0.16.2",
-    "sucrase": "^3.35.1"
+    "skia-canvas": "^3.0.8",
+    "sucrase": "^3.35.1",
+    "wasm-vips": "^0.0.16"
   },
   "koishi": {
     "service": {
@@ -54,6 +58,7 @@
     }
   },
   "devDependencies": {
+    "@types/jsdom": "^27",
     "@types/react": "^19"
   }
 }

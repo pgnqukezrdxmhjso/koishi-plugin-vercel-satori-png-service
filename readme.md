@@ -11,7 +11,16 @@ html to ReactElement [html-react-parser](https://www.npmjs.com/package/html-reac
 jsx to ReactElement [sucrase](https://www.npmjs.com/package/sucrase)
 
 ReactElement to svg [vercel/satori](https://github.com/vercel/satori#overview)
-
 [og-playground](https://og-playground.vercel.app/)
 
-svg to png [@resvg/resvg-wasm](https://www.npmjs.com/package/@resvg/resvg-wasm)
+---
+
+svg to png
+
+[@resvg/resvg-wasm](https://www.npmjs.com/package/@resvg/resvg-wasm)
+
+[wasm-vips](https://www.npmjs.com/package/wasm-vips)
+
+[skia-canvas](https://www.npmjs.com/package/skia-canvas)
+[canvg](https://www.npmjs.com/package/canvg)
+[jsdom](https://www.npmjs.com/package/jsdom)
