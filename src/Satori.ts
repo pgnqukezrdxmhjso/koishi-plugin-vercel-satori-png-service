@@ -32,7 +32,13 @@ export const initSatori = async () => {
     path.dirname(require.resolve("@resvg/resvg-wasm")),
     "index_bg.wasm",
   );
-  await resvg.initWasm(await fs.readFile(reSvgWasm));
+  try {
+    await resvg.initWasm(await fs.readFile(reSvgWasm));
+  } catch (e) {
+    if (!(e + "").includes("initialized")) {
+      throw e;
+    }
+  }
   fontData = await fs.readFile(
     require.resolve("../noto-sans-v27-latin-regular.ttf"),
   );
